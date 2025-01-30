@@ -1,7 +1,11 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 import os
 from dotenv import load_dotenv
+
+from .utils import create_chat_pipeline, create_chat_memory, create_structured_output
+from .config import get_llm
 
 # Load environment variables
 load_dotenv()
@@ -22,6 +26,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Create a chat memory instance
+chat_memory = create_chat_memory()
+
+# Create a chat pipeline
+chat_pipeline = create_chat_pipeline(chat_memory)
+
+class ChatInput(BaseModel):
+    message: str
+
 # Health check endpoint
 @app.get("/health")
 async def health_check():
@@ -35,6 +48,27 @@ async def root():
         "version": "1.0.0",
         "status": "operational"
     }
+
+# Chat endpoint
+@app.post("/chat")
+async def chat(chat_input: ChatInput):
+    try:
+        # Process the message through the chat pipeline
+        response = chat_pipeline.invoke({"input": chat_input.message})
+        
+        # Create structured response
+        return create_structured_output(
+            message=response,
+            metadata={
+                "model": "gemini-pro",
+                "type": "chat"
+            }
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"An error occurred while processing your request: {str(e)}"
+        )
 
 if __name__ == "__main__":
     import uvicorn
