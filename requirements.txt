@@ -31,4 +31,5 @@ httpx>=0.26.0
 # Production utilities
 structlog>=24.1.0
 python-json-logger>=2.0.7
-tenacity>=8.2.3 
+tenacity>=8.2.3
+
