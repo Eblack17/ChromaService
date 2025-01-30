@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, HTTPException, Depends, status, Path
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from typing import Dict, List, Optional, Any
@@ -303,7 +303,7 @@ class ConversationHistoryResponse(BaseModel):
     """
 )
 async def get_conversation_history(
-    agent_type: str = Field(
+    agent_type: str = Path(
         ...,
         description="The type of agent to get history for",
         example="greeter"
@@ -338,3 +338,4 @@ async def get_conversation_history(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve conversation history"
         ) 
+
